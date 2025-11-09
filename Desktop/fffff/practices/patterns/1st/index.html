@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D Cube</title>
+  <style>
+    body {
+      background: black;
+      margin: 0;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    canvas {
+      background: #111;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="cubeCanvas" width="400" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById('cubeCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const points = [
+      {x: -1, y: -1, z: -1},
+      {x:  1, y: -1, z: -1},
+      {x:  1, y:  1, z: -1},
+      {x: -1, y:  1, z: -1},
+      {x: -1, y: -1, z:  1},
+      {x:  1, y: -1, z:  1},
+      {x:  1, y:  1, z:  1},
+      {x: -1, y:  1, z:  1},
+    ];
+
+    const edges = [
+      [0,1],[1,2],[2,3],[3,0],
+      [4,5],[5,6],[6,7],[7,4],
+      [0,4],[1,5],[2,6],[3,7]
+    ];
+
+    let angle = 0;
+
+    function rotate3D(point, angleX, angleY) {
+      // rotate around Y
+      let cosY = Math.cos(angleY);
+      let sinY = Math.sin(angleY);
+      let x = point.x * cosY - point.z * sinY;
+      let z = point.x * sinY + point.z * cosY;
+
+      // rotate around X
+      let cosX = Math.cos(angleX);
+      let sinX = Math.sin(angleX);
+      let y = point.y * cosX - z * sinX;
+      z = point.y * sinX + z * cosX;
+
+      return {x, y, z};
+    }
+
+    function project(point) {
+      const scale = 100;
+      const distance = 3;
+      const z = point.z + distance;
+      const factor = scale / z;
+      return {
+        x: point.x * factor + canvas.width / 2,
+        y: -point.y * factor + canvas.height / 2
+      };
+    }
+
+    function drawCube() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const rotated = points.map(p => rotate3D(p, angle, angle));
+      const projected = rotated.map(p => project(p));
+
+      ctx.strokeStyle = "lime";
+      ctx.beginPath();
+      for (let edge of edges) {
+        const p1 = projected[edge[0]];
+        const p2 = projected[edge[1]];
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+      }
+      ctx.stroke();
+
+      angle += 0.02;
+      requestAnimationFrame(drawCube);
+    }
+
+    drawCube();
+  </script>
+</body>
+</html>
